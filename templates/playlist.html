@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block body %}
+<form action="/createPlaylist" method="post">
+	<input name="playlist_title" value="My new playlist">
+	<button>Create Playlist</button>
+	{% for id, meta in playlist %}
+	<div><img src="{{meta.thumbnail}}" alt="video-thumbnail"> <span> <a href="https://youtube.com/watch?v={{id}}" target="_blank">{{meta.title}}</a> </div>
+	<input type="hidden" name="{{id}}" value="1">
+	{%endfor%}
+</form>
+{%endblock%}

@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block body %}
+<h1 class="mdc-typography--display1"> Playlist Genius </h1>
+<form action="/playlist">
+	<div class="mdc-form-field">
+		<div class="mdc-textfield" data-mdc-auto-init="MDCTextfield">
+			<input id="playlist-url-input" type="text" name="playlist_url" class="mdc-textfield__input">
+			<label for="playlist-url-input" class="mdc-textfield__label">Enter a link</label>
+		</div>
+
+		<button  class="mdc-button mdc-button--raised mdc-button--primary	mdc-ripple-surface">Submit</button>
+	</div>
+
+</form>
+<br>
+<h2>Auth</h2>
+<button class="mdc-button mdc-button--raised mdc-button--primary mdc-ripple-surface" onclick="document.location.href='{{url_for("user")}}'">Sign in Youtube </button>
+{% endblock%}

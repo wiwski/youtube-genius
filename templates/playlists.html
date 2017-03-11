@@ -1,0 +1,9 @@
+{%extends "layout.html"%}
+{% black body %}
+{% for playlist in playlists %}
+<h3> {{playlist.title}} </h3>
+
+<p> {{playlist.description}} </p>
+<img src={{playlist.thumbnail}} alt"playlist thumbnail">
+{% endfor %}
+{%endblock%}
