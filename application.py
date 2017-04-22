@@ -1,6 +1,4 @@
-import flask
-from flask import Flask, session
-from flask import render_template, redirect, request
+from flask import Flask, session, render_template, redirect, request, flask
 from flask_session import Session
 import httplib2
 from apiclient import discovery
@@ -17,7 +15,7 @@ import uuid
 
 
 PLAYLISTGENIUS_DEV_KEY = os.environ.get('PLAYLISTGENIUS_DEV_KEY')
-if PLAYLISTGENIUS_DEV_KEY == None:
+if PLAYLISTGENIUS_DEV_KEY is None:
     exit('Developer key needed. You can export as PLAYLIST_DEV_KEY')
 
 app = Flask(__name__)
@@ -31,7 +29,8 @@ app.config['broker_url'] = 'amqp://guest:guest@localhost//'
 app.config['result_backend'] = 'amqp://localhost//'
 celery = Celery(app.name, broker=app.config['broker_url'])
 celery.conf.update(app.config)
-celery.conf.task_default_queue ='test'
+celery.conf.task_default_queue = 'test'
+
 
 
 TaskBase = celery.Task
@@ -45,27 +44,36 @@ class ContextTask(TaskBase):
 
 @app.route('/')
 def index():
-    return render_template('index.html') 
+    return render_template('index.html')
 
 @app.route('/playlist')
 def sendPlaylist(maxLength=50):
     #playlist id
     pUrl = urlparse(request.args.get('playlist_url'))
+    #TODO error handling when not playlist or wrong url
     pUrlId = ''.join(urllib.parse.parse_qs(pUrl.query)['list'])
 
     #get a the list of videos in playlist and extract the ids
-    playlist = youtube.playlistItems().list(part='contentDetails', maxResults=50, playlistId=pUrlId).execute()
+    playlist = youtube.playlistItems().list(
+        part='contentDetails',
+        maxResults=50,
+        playlistId=pUrlId
+        ).execute()
     playlistIds = extractIds(playlist, pUrlId)
-        
+
     #get ids of related videos
     related = getRelated(playlistIds)
-     
+
     #cut list of ids in order to have the size wanted + order it
     if len(related) < maxLength:
         maxLength = len(related)
-    relatedSorted = sorted(related.items(),key=lambda x: (x[1]['count'], x[1]['relevance']),reverse=True)[:maxLength]
+    relatedSorted = sorted(
+        related.items(),
+        key=lambda x: (x[1]['count'],
+                       x[1]['relevance']
+                      ), reverse=True)[:maxLength]
 
-    return render_template('playlist.html', playlist=relatedSorted) 
+    return render_template('playlist.html', playlist=relatedSorted)
 
 
 def extractIds(playlist, pId=None):
@@ -75,51 +83,75 @@ def extractIds(playlist, pId=None):
         playlistIds = []
     for item in playlist['items']:
         playlistIds.append(item['contentDetails']['videoId'])
-        #new request if playlist > 50 items
-        if 'nextPageToken' in playlist:
-            youtube = discovery.build('youtube', 'v3', developerKey=PLAYLISTGENIUS_DEV_KEY)
-            playlistNext = youtube.playlistItems().list(part='contentDetails', maxResults=50, playlistId=pId, pageToken=playlist['nextPageToken']).execute()
-            playlistIds.extend(extractIds(playlistNext, pId))
-            return playlistIds
-        else:
-            return playlistIds
+    #new request if playlist > 50 items
+    if 'nextPageToken' in playlist:
+        youtube = discovery.build('youtube', 'v3', developerKey=PLAYLISTGENIUS_DEV_KEY)
+        playlistNext = youtube.playlistItems().list(
+            part='contentDetails',
+            maxResults=50,
+            playlistId=pId,
+            pageToken=playlist['nextPageToken']
+            ).execute()
+        playlistIds.extend(extractIds(playlistNext, pId))
+        return playlistIds
+    else:
+        return playlistIds
 
 @celery.task
 def extractVideosHttp(pId, forNext=None):
     if forNext == None:
-        playlist = youtube.playlistItems().list(part='contentDetails', maxResults=50, playlistId=pId).execute()
-    else: 
-        playlist = youtube.playlistItems().list(part='contentDetails', maxResults=50, playlistId=pId, pageToken=playlist['nextPageToken']).execute()
-    return playlist 
+        playlist = youtube.playlistItems().list(
+            part='contentDetails',
+            maxResults=50,
+            playlistId=pId
+            ).execute()
+    else:
+        playlist = youtube.playlistItems().list(
+            part='contentDetails',
+            maxResults=50,
+            playlistId=pId,
+            pageToken=playlist['nextPageToken']
+            ).execute()
+    return playlist
 
 
 def getRelated(videoIds, maxResults=30, underground=False):
-    underground = True
+    #underground = True
     if underground == True:
         maxResults = 50
     relatedVideos = {}
-    videoIndex= 1
-    relevanceIndex = 1
+    videoIndex = 1
     playlistTotal = len(videoIds)
     videoGlobalTotal = playlistTotal * maxResults
     for vId in videoIds:
+        relevanceIndex = 1
         relevant_ids = []
         videoTotal = maxResults
         related_async = getRelatedHttp.delay(vId, maxResults)
         related = related_async.wait()
-        relevant_ids = [video['id']['videoId'] for video in related['items']
+        relevant_ids = [video['id']['videoId'] for video in related['items']]
 
-        if underground is True:
+        if underground == True:
             undergrounds = onlyUnderground(related, vId=vId)
             relevant_ids = [underg[0] for underg in undergrounds]
-            related = youtube.search().list(part='snippet', maxResults=maxResults,order='relevance', relatedToVideoId=videoId, type='video', pageToken=nextPageToken).execute()
+            related = youtube.search().list(
+                part='snippet',
+                maxResults=maxResults,
+                order='relevance',
+                relatedToVideoId=videoId,
+                type='video',
+                pageToken=nextPageToken
+                ).execute()
 
         for video in related['items']:
             if video['id']['videoId'] in relatedVideos:
                 currentCount = relatedVideos[video['id']['videoId']]['count']
                 currentRelevance = relatedVideos[video['id']['videoId']]['relevance']
                 relatedVideos[video['id']['videoId']]['count'] = currentCount + 1
-                relatedVideos[video['id']['videoId']]['relevance'] = ((currentCount*currentRelevance)+relevanceIndex)/(currentCount+1)
+                relatedVideos[video['id']['videoId']]['relevance'] = (
+                    (currentCount*currentRelevance)+relevanceIndex
+                    )/(currentCount+1)
+
             elif video['id']['videoId'] not in videoIds:
                 count = 1
                 relatedVideos[video['id']['videoId']] = {
@@ -129,15 +161,18 @@ def getRelated(videoIds, maxResults=30, underground=False):
                     'thumbnail': video['snippet']['thumbnails']['default']['url']
 
                 }
-                relevanceIndex -= 1/videoGlobalTotal
-        videoIndex +=1
+                relevanceIndex -= 1/len(related['items'])
+        videoIndex += 1
     return relatedVideos
 
-def onlyUnderground(videos, vId, whatsUnderground = 100000, nextPageToken=None, sumVideo=0, deep=-1):
+def onlyUnderground(videos, vId,
+                    whatsUnderground=100000, nextPageToken=None,
+                    sumVideo=0, deep=-1):
+
     list_ids = []
     if nextPageToken is not None:
         videos_asyncs = getRelatedHttp.delay(vId, maxResults=50, nextPageToken=nextPageToken)
-        videos = videos_asyncs.wait()  
+        videos = videos_asyncs.wait()
     if deep >= 0:
         videos_asyncs = getRelatedHttp.delay(vId, maxResults=50)
         videos = videos_asyncs.wait()
@@ -147,28 +182,57 @@ def onlyUnderground(videos, vId, whatsUnderground = 100000, nextPageToken=None, 
         list_ids = list_ids[:50]
     list_ids = ','.join(list_ids)
     statVideos = youtube.videos().list(
-        part='statistics', 
+        part='statistics',
         id=list_ids
     ).execute()
-    undergroundVideos = [(statVideo['id'] , int(statVideo['statistics']['viewCount'])) for statVideo in statVideos['items'] if int(statVideo['statistics']['viewCount']) < whatsUnderground]
+    undergroundVideos = []
+    for statVideo in statVideos['items']:
+        try:
+            if int(statVideo['statistics']['viewCount']) < whatsUnderground:
+                undergroundVideos.append(
+                    (statVideo['id'],
+                     int(statVideo['statistics']['viewCount']))
+                    )
+        except KeyError:
+            pass
     sumVideo += len(undergroundVideos)
+
     while True:
         if sumVideo > 30:
             break
         if 'nextPageToken' not in videos:
             #take the first element in the list and get relevant items -> deepen the search
             deep += 1
-            undergroundVideos.extend(onlyUnderground(videos=None, vId=undergroundVideos[deep][0], nextPageToken=None, sumVideo=sumVideo, deep=deep))
-            sumVideo=len(undergroundVideos)
+            undergroundVideos.extend(
+                onlyUnderground(
+                    videos=None,
+                    vId=undergroundVideos[deep][0],
+                    nextPageToken=None,
+                    sumVideo=sumVideo,
+                    deep=deep)
+            )
+            sumVideo = len(undergroundVideos)
             continue
-        undergroundVideos.extend(onlyUnderground(videos=None, vId=vId, nextPageToken=videos['nextPageToken'], sumVideo=sumVideo))
+        undergroundVideos.extend(onlyUnderground(
+            videos=None,
+            vId=vId,
+            nextPageToken=videos['nextPageToken'],
+            sumVideo=sumVideo)
+                                )
         sumVideo = len(undergroundVideos)
     return undergroundVideos
 
 
 @celery.task
 def getRelatedHttp(videoId, maxResults=30, nextPageToken=None):
-    related = youtube.search().list(part='snippet', maxResults=maxResults,order='relevance', relatedToVideoId=videoId, type='video', pageToken=nextPageToken).execute()
+    related = youtube.search().list(
+        part='snippet',
+        maxResults=maxResults,
+        order='relevance',
+        relatedToVideoId=videoId,
+        type='video',
+        pageToken=nextPageToken
+        ).execute()
     return related
 
 
@@ -177,18 +241,18 @@ def getRelatedHttp(videoId, maxResults=30, nextPageToken=None):
 def createPlaylist():
     session['playlist'] = json.dumps(dict(request.form))
     if 'credentials' not in flask.session:
-        flask.session['prev_page']='createPlaylist'
+        flask.session['prev_page'] = 'createPlaylist'
         return flask.redirect(flask.url_for('authentificated'))
     credentials = client.OAuth2Credentials.from_json(flask.session['credentials'])
     if credentials.access_token_expired:
-        flask.session['prev_page']='createPlaylist'
+        flask.session['prev_page'] = 'createPlaylist'
         return flask.redirect(flask.url_for('authentificated'))
     playlist = json.loads(session.get('playlist'))
 
     http_auth = credentials.authorize(httplib2.Http())
     youtube = discovery.build('youtube', 'v3', http=http_auth)
     newPlaylist = youtube.playlists().insert(
-        part = "snippet",
+        part="snippet",
         body=dict(
             snippet=dict(
                 title=playlist['playlist_title']
@@ -209,7 +273,7 @@ def createPlaylist():
                 }
             }
         ).execute()
-        return 'https://youtube.com/playlist?list='+newPlaylisrt['id'] 
+        return 'https://youtube.com/playlist?list='+newPlaylisrt['id']
 
 @app.route('/authentificated')
 def authentificated():
@@ -239,25 +303,24 @@ def user():
         http_auth = credentials.authorize(httplib2.Http())
         youtube = discovery.build('youtube', 'v3', http=http_auth)
         allPlaylists = youtube.playlists().list(
-            part = "snippet",
-            mine = True
+            part="snippet",
+            mine=True
         ).execute()
-        playlists=[]
+        playlists = []
         for p in allPlaylists['items']:
-            p=p['snippet']
-            playlist={}
-            playlist['thumbnail']=p['thumbnails']['high']['url']
-            playlist['description']=p['localized']['description']
-            playlist['title']=p['localized']['title']
+            p = p['snippet']
+            playlist = {}
+            playlist['thumbnail'] = p['thumbnails']['high']['url']
+            playlist['description'] = p['localized']['description']
+            playlist['title'] = p['localized']['title']
             playlists.append(playlist)
-            return render_template('playlists.html', playlists=playlists) 
+            return render_template('playlists.html', playlists=playlists)
 
 
 
 if __name__ == "__main__":
-    app.debug=True
-    SESSION_TYPE='redis'
+    SESSION_TYPE = 'redis'
     Session(app)
 
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0')
 
