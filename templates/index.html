@@ -1,18 +1,38 @@
 {% extends "layout.html" %}
 {% block body %}
-<h1 class="mdc-typography--display1"> Playlist Genius </h1>
-<form action="/playlist">
+<h1 class="mdc-typography--display1"> </h1>
+<form>
 	<div class="mdc-form-field">
 		<div class="mdc-textfield" data-mdc-auto-init="MDCTextfield">
 			<input id="playlist-url-input" type="text" name="playlist_url" class="mdc-textfield__input">
 			<label for="playlist-url-input" class="mdc-textfield__label">Enter a link</label>
 		</div>
 
-		<button  class="mdc-button mdc-button--raised mdc-button--primary	mdc-ripple-surface">Submit</button>
+		<button type="button" onclick="handleForm()"  class="mdc-button mdc-button--raised mdc-button--primary	mdc-ripple-surface">Submit</button>
 	</div>
 
 </form>
 <br>
 <h2>Auth</h2>
 <button class="mdc-button mdc-button--raised mdc-button--primary mdc-ripple-surface" onclick="document.location.href='{{url_for("user")}}'">Sign in Youtube </button>
+
+<script>
+	function handleForm() {
+		var url = $('#playlist-url-input').val();
+		var params = parseUrl(url).search;
+		params = params.replace('?', '');
+		params = params.split('+');
+		params = params.map(param => param.split('='));
+		var playlistId = params.find(param => param[0] == 'list');
+		if(playlistId) {
+			document.location.replace(`/playlist/${playlistId[1]}`);
+		}
+	}
+	function parseUrl( url ) {
+    var a = document.createElement('a');
+    a.href = url;
+    return a;
+}
+
+</script>
 {% endblock%}

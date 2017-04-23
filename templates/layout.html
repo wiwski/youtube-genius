@@ -7,7 +7,26 @@
 		<link rel=stylesheet type=text/css href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
 	</head>
 	<body>
+		<style>
+		:root {
+			--mdc-theme-primary: #cc181e;
+		}
+		body {
+			margin: 0;
+		}
+		</style>
+		<header class="mdc-toolbar" style="    box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);">
+			<div class="mdc-toolbar__row">
+				<section class="mdc-toolbar__section mdc-toolbar__section--align-start">
+					<span class="mdc-toolbar__title">Playlist Genius</span>
+				</section>
+			</div>
+		</header>
 		{% block body %}{% endblock %}
+		<script
+		src="https://code.jquery.com/jquery-3.2.1.min.js"
+		integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+		crossorigin="anonymous"></script>
 		<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 		<script>window.mdc.autoInit();</script>
 	</body>

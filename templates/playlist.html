@@ -1,11 +1,36 @@
 {% extends "layout.html" %}
 {% block body %}
-<form action="/createPlaylist" method="post">
-	<input name="playlist_title" value="My new playlist">
-	<button>Create Playlist</button>
-	{% for id, meta in playlist %}
-	<div><img src="{{meta.thumbnail}}" alt="video-thumbnail"> <span> <a href="https://youtube.com/watch?v={{id}}" target="_blank">{{meta.title}}</a> </div>
-	<input type="hidden" name="{{id}}" value="1">
-	{%endfor%}
-</form>
+<div style="margin:24px">
+
+	<div style="margin-bottom:24px">
+		<h1 class="mdc-typography--title">Here are the tracks we found</h1>
+		<span class="mdc-typography--body2">You can give a name to your playlist and press the button to create it!</span>
+	</div>
+
+	<div style="margin-bottom:24px">
+		<form action="/createPlaylist" method="post">
+
+			<div class="mdc-textfield">
+				<input type="text" id="input-title" name="playlist_title" 
+				value="My new playlist" class="mdc-textfield__input">
+			</div>
+
+
+			<button class="mdc-button mdc-button--raised mdc-button mdc-button--primary">CREATE MY PLAYLIST</button>
+			<ul class="mdc-list mdc-list--avatar-list">
+			{% for id, meta in playlist %}
+				<li class="mdc-list-item">
+					<img src="{{meta.thumbnail}}"  class="mdc-list-item__start-detail" alt="video-thumbnail"
+					width="56" height="56">
+					<button type="button" class="mdc-button" onclick="window.open('https://youtube.com/watch?v={{id}}', '_blank')">
+						<a class="mdc-typography--caption">{{meta.title}}</a> 
+					</button>		
+				</li>
+			<input type="hidden" name="{{id}}" value="1">
+			{%endfor%}
+			</ul>
+		</form>
+	</div>
+</div>
+
 {%endblock%}

@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block body %}
+<div style="margin:24px">
+    <h1 class="mdc-typography--title">Hooray!</h1>
+    <h2 class="mdc-typography--subheading2">Your new playlist is now available</h2>
+    <button onclick="window.location.replace('{{newPlaylist}}')" 
+    class="mdc-button mdc-button--raised mdc-button--primary" style="margin-bottom:14px;">
+        Go to Youtube
+    </button>
+</div>
+
+{%endblock%}
