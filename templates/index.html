@@ -1,20 +1,33 @@
 {% extends "layout.html" %}
 {% block body %}
-<h1 class="mdc-typography--display1"> </h1>
-<form>
-	<div class="mdc-form-field">
-		<div class="mdc-textfield" data-mdc-auto-init="MDCTextfield">
-			<input id="playlist-url-input" type="text" name="playlist_url" class="mdc-textfield__input">
-			<label for="playlist-url-input" class="mdc-textfield__label">Enter a link</label>
+<div style="display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: calc(100% - 64px);
+	">
+	<div style="width:500px">
+		<h1 class="mdc-typography--title">Enter a playlist link from Youtube and we'll create a brand new playlist similar to the one you entered.</h1>
+	</div>
+	<form>
+		<div class="mdc-form-field">
+			<br>
+			<div class="mdc-textfield" data-mdc-auto-init="MDCTextfield">
+				<input id="playlist-url-input" type="text" name="playlist_url" class="mdc-textfield__input">
+				<label for="playlist-url-input" class="mdc-textfield__label">Enter a link</label>
+			</div>
+
+			<button type="button" onclick="handleForm()"  class="mdc-button mdc-button--raised mdc-button--primary	mdc-ripple-surface">Submit</button>
 		</div>
 
-		<button type="button" onclick="handleForm()"  class="mdc-button mdc-button--raised mdc-button--primary	mdc-ripple-surface">Submit</button>
+	</form>
+	<br>
+	<div style="width:500px; text-align:center">
+		<h2 class="mdc-typography--subheading2">You can also log into your YouTube account and choose a playlist from there.</h2>
+		<button class="mdc-button mdc-button--raised mdc-button--primary mdc-ripple-surface" 
+		onclick="document.location.href='{{url_for("user")}}'">Log in Youtube </button>
 	</div>
-
-</form>
-<br>
-<h2>Auth</h2>
-<button class="mdc-button mdc-button--raised mdc-button--primary mdc-ripple-surface" onclick="document.location.href='{{url_for("user")}}'">Sign in Youtube </button>
+</div>
 
 <script>
 	function handleForm() {

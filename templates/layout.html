@@ -11,6 +11,9 @@
 		:root {
 			--mdc-theme-primary: #cc181e;
 		}
+		html, body {
+			height: 100%;
+		}
 		body {
 			margin: 0;
 		}
@@ -18,7 +21,14 @@
 		<header class="mdc-toolbar" style="    box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);">
 			<div class="mdc-toolbar__row">
 				<section class="mdc-toolbar__section mdc-toolbar__section--align-start">
-					<span class="mdc-toolbar__title">Playlist Genius</span>
+					<button  type="button" onclick="window.location.replace('/')" class="mdc-button">
+					<span class="mdc-toolbar__title" style="color:white">
+						Playlist Genius
+						</span>
+					</button>
+				</section>
+				<section class="mdc-toolbar__section mdc-toolbar__section--align-end">
+					<span class="mdc-typography--subheading1">A new way to discover music</span>
 				</section>
 			</div>
 		</header>
