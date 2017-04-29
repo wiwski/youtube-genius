@@ -239,7 +239,6 @@ def getRelatedHttp(videoId, maxResults=30, nextPageToken=None):
 
 @app.route('/createPlaylist', methods=['GET', 'POST', 'PUT'])
 def createPlaylist():
-    return render_template('mynewplaylist.html', newPlaylist='https://youtube.com/playlist?list=PLv2iKoUrni8OL93-7pvC_ZWiQfDVmCEnr')
     session['playlist'] = json.dumps(dict(request.form))
     if 'credentials' not in session:
         session['prev_page'] = 'createPlaylist'
@@ -279,7 +278,7 @@ def createPlaylist():
 @app.route('/authentificated')
 def authentificated():
     flow = client.flow_from_clientsecrets(
-        '/home/witoldw/dev/youtube-genius/secret.json',
+        'secret.json',
         scope=' https://www.googleapis.com/auth/youtube',
         redirect_uri=url_for('authentificated', _external=True)
     )
